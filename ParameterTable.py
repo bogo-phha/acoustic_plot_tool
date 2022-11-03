@@ -6,12 +6,12 @@ class ParameterTable():
         self.table = ipysheet.sheet(rows=len(measurements),
                                columns=7,
                                column_headers=["Label",
-                                               "Amp Offset",
-                                               "Amp Normalize",
-                                               "Amp Normalize Freq",
-                                               "Phase Offset",
-                                               "Phase Normalize",
-                                               "Phase Normalize Freq"],
+                                               "Driver Calibration",
+                                               "Invert Driver",
+                                               "Driver Phase",
+                                               "FF Target Ear Phase",
+                                               "FF Target FB Phase",
+                                               "Export"],
                                row_headers=False)
         self.rows = []
         self.cells = []
@@ -23,35 +23,35 @@ class ParameterTable():
             columns["Label"] = cell_label
             self.cells.append(cell_label)
 
-            cell_ampoffset = ipysheet.cell(i, 1, self.measurements[i].ampoffset)
-            cell_ampoffset.observe(self.onChange, 'value')
-            columns["Amp Offset"] = cell_ampoffset
-            self.cells.append(cell_ampoffset)
+            cell_driver = ipysheet.cell(i, 1, self.measurements[i].driverCalibration)
+            cell_driver.observe(self.onChange, 'value')
+            columns["Driver Calibration"] = cell_driver
+            self.cells.append(cell_driver)
 
-            cell_ampnormalize = ipysheet.cell(i, 2, self.measurements[i].ampnormalize)
-            cell_ampnormalize.observe(self.onChange, 'value')
-            columns["Amp Norm"] = cell_ampnormalize
-            self.cells.append(cell_ampnormalize) 
+            cell_driver_invert = ipysheet.cell(i, 2, self.measurements[i].invertDriver)
+            cell_driver_invert.observe(self.onChange, 'value')
+            columns["Invert Driver"] = cell_driver_invert
+            self.cells.append(cell_driver_invert)
 
-            cell_ampnormalizefreq = ipysheet.cell(i, 3, self.measurements[i].ampnormalizefreq)
-            cell_ampnormalizefreq.observe(self.onChange, 'value')
-            columns["Amp Norm Freq"] = cell_ampnormalizefreq
-            self.cells.append(cell_ampnormalizefreq)
+            cell_driver_phase = ipysheet.cell(i, 3, self.measurements[i].driverPhase)
+            cell_driver_phase.observe(self.onChange, 'value')
+            columns["Driver Phase"] = cell_driver_phase
+            self.cells.append(cell_driver_phase)
 
-            cell_phaoffset = ipysheet.cell(i, 4, self.measurements[i].phaoffset)
-            cell_phaoffset.observe(self.onChange, 'value')
-            columns["Phase Offset"] = cell_phaoffset
-            self.cells.append(cell_phaoffset)
+            cell_FFTargetEarPhase = ipysheet.cell(i, 4, self.measurements[i].FFTargetEarPhase)
+            cell_FFTargetEarPhase.observe(self.onChange, 'value')
+            columns["FF Target Ear Phase"] = cell_FFTargetEarPhase
+            self.cells.append(cell_FFTargetEarPhase)
 
-            cell_phanormalize = ipysheet.cell(i, 5, self.measurements[i].phanormalize)
-            cell_phanormalize.observe(self.onChange, 'value')
-            columns["Phase Norm"] = cell_phanormalize
-            self.cells.append(cell_phanormalize)
+            cell_FFTargetFBPhase = ipysheet.cell(i, 5, self.measurements[i].FFTargetFBPhase)
+            cell_FFTargetFBPhase.observe(self.onChange, 'value')
+            columns["FF Target FB Phase"] = cell_FFTargetFBPhase
+            self.cells.append(cell_FFTargetFBPhase)
 
-            cell_phanormalizefreq = ipysheet.cell(i, 6, self.measurements[i].phanormalizefreq)
-            cell_phanormalizefreq.observe(self.onChange, 'value')
-            columns["Phase Norm Freq"] = cell_phanormalizefreq
-            self.cells.append(cell_phanormalizefreq)
+            cell_export = ipysheet.cell(i, 6, self.measurements[i].export)
+            cell_export.observe(self.onChange, 'value')
+            columns["Export"] = cell_export
+            self.cells.append(cell_export)
 
             self.rows.append(columns)
 
@@ -59,31 +59,11 @@ class ParameterTable():
         for i in range(len(self.measurements)):
             self.measurements[i].label = self.rows[i]["Label"].value
 
-            self.measurements[i].ampoffset = self.rows[i]["Amp Offset"].value 
-            self.measurements[i].ampnormalize = self.rows[i]["Amp Norm"].value
-            self.measurements[i].ampnormalizefreq = self.rows[i]["Amp Norm Freq"].value
-            self.measurements[i].phaoffset = self.rows[i]["Phase Offset"].value
-            self.measurements[i].phanormalize     = self.rows[i]["Phase Norm"].value
-            self.measurements[i].phanormalizefreq = self.rows[i]["Phase Norm Freq"].value
-            self.measurements[i].calculateTransferFunctions()
-            
-class ParameterTable_Meas():
-    def __init__(self, measurements):
-        self.measurements = measurements
-        self.table = ipysheet.sheet(rows=len(measurements),
-                               columns=4,
-                               column_headers=["-Mic-",
-                                               "SNR",
-                                               "Sensitivity",
-                                               "THD"
-                                               ],
-                               row_headers=False)
+            self.measurements[i].setDriverCalibration( self.rows[i]["Driver Calibration"].value )
+            self.measurements[i].setDriverInversion( self.rows[i]["Invert Driver"].value)
 
-        for i in range(len(self.measurements)):
+            self.measurements[i].driverPhase = self.rows[i]["Driver Phase"].value
+            self.measurements[i].FFTargetEarPhase = self.rows[i]["FF Target Ear Phase"].value
+            self.measurements[i].FFTargetFBPhase = self.rows[i]["FF Target FB Phase"].value
 
-            cell_Label = ipysheet.cell(i, 0, self.measurements[i].label[-60:])
-            cell_Snr = ipysheet.cell(i, 1, self.measurements[i].H["oSnr"])
-            cell_Sens = ipysheet.cell(i, 2, self.measurements[i].H["oSens"])
-            cell_Thd = ipysheet.cell(i, 3, self.measurements[i].H["oThd"])
-
-    
+            self.measurements[i].export = self.rows[i]["Export"].value
