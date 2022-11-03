@@ -19,72 +19,53 @@ class Measurements:
 class Measurement:
     path = None
     def __init__(self):
-        self.keys = ["A2E",
-                "A2FF",
-                "A2FB",
-                "D2E",
-                "D2FF",
-                "D2FB",
-                "A2E(open)",
-                "Passive",
-                "FFTargetEar",
-                "FFTargetFB",
-                "D2E/D2FB",
-                "D2FB/D2FF",
-                "A2E/A2FB",
-                "A2FB/A2FF",
-                "(D2E/D2FB)/(A2E/A2FB)",
-                "1/D2E",
-                "1/D2FB"]
+        self.keys = ["FR",
+                "THD",
+                "AOP",
+                ]
         self.H = dict()
-        self.f = np.logspace(0,4,500)
 
         # Further Parameters
         self.label = ""
 
-        self.driverCalibration = 0
-        self.invertDriver = False
-
-        self.driverPhase = 0
-        self.FFTargetEarPhase = 0
-        self.FFTargetFBPhase = 0
-        self.export = False
+        self.ampoffset = 0
+        self.ampnormalize = False
+        self.ampnormalizefreq= 0
+        self.phaoffset = 0
+        self.phanormalize = False
+        self.phanormalizefreq= 0
 
         # Parse the available data
         self.parse_file()
 
-        # Fill the voids
-        for key in self.keys:
-            try:
-                a = self.H["o"+key]
-            except KeyError:
-                self.H["o"+key] = np.ones(np.shape(self.f))
-
         # Calculate the derived transfer functions
-        self.caluclateTransferFunctions()
+        self.calculateTransferFunctions()
 
-    def caluclateTransferFunctions(self):
-        self.H["D2E"] = self.H["oD2E"] * 10**(self.driverCalibration/20) * np.e**( 1j * np.deg2rad(180*self.invertDriver) )
-        self.H["D2FB"] = self.H["oD2FB"] * 10**(self.driverCalibration/20)* np.e**( 1j * np.deg2rad(180*self.invertDriver) )
-        self.H["D2FF"] = self.H["oD2FF"] * 10**(self.driverCalibration/20)* np.e**( 1j * np.deg2rad(180*self.invertDriver) )
+    def calculateTransferFunctions(self):
+        
+        # if self.H["oMagRefx"] != None:
+        #     pass
+        #     # self.H["MagY"] = self.H["oMagy"] - self.H["oMagRefy"]
+        #     # self.H["PhaY"] = self.H["oPhay"] - self.H["oPhaRefy"]
+        # else:
+        
+        if self.ampnormalize == False:
+            self.H["MagY"] = self.H["oMagY"] + self.ampoffset
+        else: 
+            [idx, value] = find_nearest(self.H["oMagX"], self.ampnormalizefreq)  
+            self.H["MagY"] = self.H["oMagY"] - self.H["oMagY"][idx]        
 
-        self.H["A2E"] = self.H["oA2E"]
-        self.H["A2E(open)"] = self.H["oA2E(open)"]
-        self.H["A2FB"] = self.H["oA2FB"]
-        self.H["A2FF"] = self.H["oA2FF"]
-
-        self.H["Passive"] = self.H["A2E"] / self.H["A2E(open)"]
-        self.H["FFTargetEar"] = self.H["A2E"] / (self.H["A2FF"] * self.H["D2E"])
-        self.H["FFTargetFB"] = self.H["A2FB"] / (self.H["A2FF"] * self.H["D2FB"])
-        self.H["D2E/D2FB"] = self.H["D2E"] / self.H["D2FB"]
-        self.H["D2FB/D2FF"] = self.H["D2FB"]/self.H["D2FF"]
-        self.H["A2E/A2FB"] = self.H["A2E"] / self.H["A2FB"]
-        self.H["A2FB/A2FF"] = self.H["A2FB"]/self.H["A2FF"]
-        self.H["(D2E/D2FB)/(A2E/A2FB)"] = (self.H["D2E"] / self.H["D2FB"]) / (self.H["A2E"] / self.H["A2FB"])
-
-        self.H["1/D2E"] = 1/self.H["D2E"]
-        self.H["1/D2FB"] = 1/self.H["D2FB"]
-
+        self.H["MagX"] = self.H["oMagX"] 
+        self.H["PhaX"] = self.H["oPhaX"]
+        self.H["PhaY"] = self.H["oPhaY"]
+        self.H["AopX"] = self.H["oAopX"]
+        self.H["AopY"] = self.H["oAopY"]
+        self.H["ThdX"] = self.H["oThdX"]
+        self.H["ThdY"] = self.H["oThdY"]
+        self.H["Snr"] = self.H["oSnr"] 
+        self.H["Thd"] = self.H["oThd"] 
+        self.H["Sens"] = self.H["oSens"]
+        
 
     def setDriverCalibration(self, offset):
         self.driverCalibration = offset
@@ -97,82 +78,35 @@ class Measurement:
     def parse_file(self):
         pass
 
-
-class FreD(Measurement):
+class Mic(Measurement):
     def __init__(self, path):
         self.path = path
         super().__init__()
-
+        
     def parse_file(self):
-        data = ApXls.MeasurementSet(self.path)
-        self.f = data.x
-        self.H["oD2E"] = toComplex(data.Y[10], data.Y[11])
-        self.H["oD2FB"] = toComplex(data.Y[6], data.Y[7])
-        self.H["oD2FF"] = toComplex(data.Y[2], data.Y[3])
-        self.H["oA2E"] = toComplex(data.Y[8], data.Y[9])
-        self.H["oA2FB"] = toComplex(data.Y[4], data.Y[5])
-        self.H["oA2FF"] = toComplex(data.Y[0], data.Y[1])
+        file = "Mic Measurement"
+        data = None
+        if os.path.exists(self.path + "/" + file + ".xlsx"):
+            data = ApXls.MeasurementMic(self.path + "/" + file + ".xlsx")
+        if os.path.exists(self.path + "/" + file + ".xls"):
+            data = ApXls.MeasurementMic(self.path + "/" + file + ".xls")
 
-class FleX(Measurement):
-    def __init__(self, path):
-        self.path = path
-        super().__init__()
+        self.H["oMagX"] = data.magx
+        self.H["oMagY"] = data.magy
+        self.H["oPhaX"] = data.phax
+        self.H["oPhaY"] = data.phay
+        self.H["oAopX"] = data.aopx
+        self.H["oAopY"] = data.aopy
+        self.H["oThdX"] = data.thdx
+        self.H["oThdY"] = data.thdy
+        self.H["oSnr"] = data.snr
+        self.H["oThd"] = data.thd
+        self.H["oSens"] = data.sens
 
-    def parse_file(self):
-        # Parse folder
-        files = ["D2E", "D2FB", "D2FF", "A2E", "A2FB", "A2FF", "A2E(open)"]
-        self.f = ApXls.MeasurementSet(self.path + "/" + "D2FB.xlsx").x
-
-        for file in files:
-            if os.path.exists(self.path + "/" + file + ".xlsx"):
-                data = ApXls.MeasurementSet(self.path + "/" + file + ".xlsx")
-                mag = data.Y[0]
-                phs = data.Y[1]
-                h = toComplex(mag, phs)
-                self.H["o"+file] = h
-            else:
-                # Fill in zeros
-                self.H[file] = 1j* 1e-200 * np.ones( np.shape(self.f) )
         # Define the additional parameters
-        self.label = self.path[-80:]
+        self.label = self.path[-60:]
 
-"""
-class FFAnalog(Measurement):
-    def __init__(self, path):
-        self.path = path
-        super().__init__()
-
-    def parse_file(self):
-        data = ApXls.MeasurementSet(self.path)
-        self.f = data.x
-        self.H["A2E"] = toComplex( data.Y[0], data.Y[2] )
-        self.H["A2FF"] = toComplex( data.Y[1], data.Y[3] )
-        self.H["D2E"] = toComplex( data.Y[4], data.Y[6] )
-        self.H["D2FF"] = toComplex( data.Y[5], data.Y[7] )
-
-class FBAnalog(Measurement):
-    def __init__(self, path):
-        self.path = path
-        super().__init__()
-
-    def parse_file(self):
-        data = ApXls.MeasurementSet(self.path)
-        self.f = data.x
-        self.H["D2E"] = toComplex( data.Y[0], data.Y[2] )
-        self.H["D2FB"] = toComplex( data.Y[1], data.Y[3] )
-
-This was some other template:
-class AnotherTemplate(Measurement):
-    def __init__(self, path):
-        self.path = path
-        super().__init__()
-
-    def parse_file(self):
-        data = ApXls.MeasurementSet(self.path)
-        self.f = data.x
-        self.H["D2E"] = toComplex(data.Y[0], data.Y[1])
-        self.H["A2E"] = toComplex(data.Y[2], data.Y[3])
-        self.H["D2FB"] = toComplex(data.Y[4], data.Y[5])
-        self.H["A2FB"] = toComplex(data.Y[6], data.Y[7])
-        self.H["A2FF"] = toComplex(data.Y[8], data.Y[9])
-"""
+def find_nearest(array, value):
+    array = np.asarray(array)
+    idx = (np.abs(array - value)).argmin()
+    return [idx, array[idx]]

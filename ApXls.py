@@ -156,13 +156,13 @@ class MeasurementSet(Measurement):
 
         sheetsInFile = self.xls.sheet_names
         for sheet in sheetsInFile:
-            data = self.xls.parse(sheet).values
-            m = Sheet(data)
-            for y in m.Y:
+            data = self.xls.parse(sheet).values     # will store numpy array in data
+            m = Sheet(data)                         # create sheet class with this data. Sheet class will split data into lists of X and Y values 
+            for y in m.Y:                           # x&y will interate though each channel of sheet m and create a list of all y data in self.y! One measurement series (channel) can be accessed via self.y[0]
                 self.Y.append(y)
             for x in m.X:
                 self.X.append(x)
-            self.Title.append( m.title )
+            self.Title.append( m.title )            # create list of all sheet titles. Title of first sheet measurement is self.Title[0]
 
             self.sheet.append(m)
 
@@ -171,3 +171,46 @@ class MeasurementSet(Measurement):
         self.xunit = self.sheet[0].xunit
         self.yunit = self.sheet[0].yunit
         self.title = self.sheet[0].title
+
+
+class MeasurementMic(Measurement):
+    
+    
+    def __init__(self, file):
+        self.file = file
+        self.xls = pd.ExcelFile(self.file)
+        self.sheets = list()
+        self.magrefx = None
+        self.magrefy = None
+
+
+        sheetsInFile = self.xls.sheet_names
+        for sheet in sheetsInFile:
+            data = self.xls.parse(sheet).values     # will store numpy array in data
+            self.sheets.append(data)
+
+        self.snr = self.sheets[0][3,1]
+        self.magx = Sheet(self.sheets[2]).x
+        self.magy = Sheet(self.sheets[2]).y
+        self.phax = Sheet(self.sheets[3]).x
+        self.phay = Sheet(self.sheets[4]).y
+        self.thd = self.sheets[8][3,1]
+        self.sens = self.sheets[6][3,1]
+        self.aopx = Sheet(self.sheets[9]).X[1]
+        self.aopy = Sheet(self.sheets[9]).Y[1]
+        self.thdx = Sheet(self.sheets[5]).X[1]
+        self.thdy = Sheet(self.sheets[5]).Y[1]
+        
+
+    
+    
+
+
+
+
+
+
+
+
+
+    
