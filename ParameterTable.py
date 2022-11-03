@@ -82,8 +82,13 @@ class ParameterTable_Meas():
         for i in range(len(self.measurements)):
 
             cell_Label = ipysheet.cell(i, 0, self.measurements[i].label[-60:])
-            cell_Snr = ipysheet.cell(i, 1, self.measurements[i].H["oSnr"])
-            cell_Sens = ipysheet.cell(i, 2, self.measurements[i].H["oSens"])
-            cell_Thd = ipysheet.cell(i, 3, self.measurements[i].H["oThd"])
+            cell_Snr = ipysheet.cell(i, 1, f'{self.measurements[i].H["oSnr"]:.2f}' + " dB")
+            
+            if self.measurements[i].mictype == "analog":
+                cell_Sens = ipysheet.cell(i, 2, f'{self.measurements[i].H["oSens"]:.2f}' + " dBV")
+            elif self.measurements[i].mictype == "digital":
+                cell_Sens = ipysheet.cell(i, 2, f'{self.measurements[i].H["oSens"]:.2f}' + " dBFS")
+
+            cell_Thd = ipysheet.cell(i, 3, f'{self.measurements[i].H["oThd"]:.2f}' + " %")
 
     

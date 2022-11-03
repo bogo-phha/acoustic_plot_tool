@@ -90,7 +90,7 @@ class Mic(Measurement):
             data = ApXls.MeasurementMic(self.path + "/" + file + ".xlsx")
         if os.path.exists(self.path + "/" + file + ".xls"):
             data = ApXls.MeasurementMic(self.path + "/" + file + ".xls")
-
+        
         self.H["oMagX"] = data.magx
         self.H["oMagY"] = data.magy
         self.H["oPhaX"] = data.phax
@@ -105,6 +105,7 @@ class Mic(Measurement):
 
         # Define the additional parameters
         self.label = self.path[-60:]
+        self.mictype = data.mictype
 
 def find_nearest(array, value):
     array = np.asarray(array)

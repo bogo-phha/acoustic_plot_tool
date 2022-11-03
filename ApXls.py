@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import os
+from Measurements import find_nearest
 
 
 class Measurement:
@@ -180,26 +181,65 @@ class MeasurementMic(Measurement):
         self.file = file
         self.xls = pd.ExcelFile(self.file)
         self.sheets = list()
-        self.magrefx = None
-        self.magrefy = None
-
+        self.mictype = None
 
         sheetsInFile = self.xls.sheet_names
+        # Check if mictype is analog or digital
+
         for sheet in sheetsInFile:
             data = self.xls.parse(sheet).values     # will store numpy array in data
             self.sheets.append(data)
 
-        self.snr = self.sheets[0][3,1]
-        self.magx = Sheet(self.sheets[2]).x
-        self.magy = Sheet(self.sheets[2]).y
-        self.phax = Sheet(self.sheets[3]).x
-        self.phay = Sheet(self.sheets[4]).y
-        self.thd = self.sheets[8][3,1]
-        self.sens = self.sheets[6][3,1]
-        self.aopx = Sheet(self.sheets[9]).X[1]
-        self.aopy = Sheet(self.sheets[9]).Y[1]
-        self.thdx = Sheet(self.sheets[5]).X[1]
-        self.thdy = Sheet(self.sheets[5]).Y[1]
+        if sheetsInFile[0] == "Signal to Noise Ratio":
+            self.mictype = "analog"
+
+            self.snr = self.sheets[0][3,1]
+            self.magx = Sheet(self.sheets[2]).x
+            self.magy = Sheet(self.sheets[2]).y
+            self.phax = Sheet(self.sheets[4]).x
+            self.phay = Sheet(self.sheets[4]).y
+            self.thd = self.sheets[8][3,1]
+            self.sens = self.sheets[6][3,1]
+            self.aopx = Sheet(self.sheets[9]).X[1]
+            self.aopy = Sheet(self.sheets[9]).Y[1]
+            self.thdx = Sheet(self.sheets[5]).X[1]
+            self.thdy = Sheet(self.sheets[5]).Y[1]
+
+        elif sheetsInFile[0] == "RMS Level":
+            self.mictype = "digital"
+
+            self.snr = self.sheets[4][2,1]
+            self.magx_dut = Sheet(self.sheets[5]).x
+            self.magy_dut = Sheet(self.sheets[5]).y
+            self.phax_dut = Sheet(self.sheets[6]).x
+            self.phay_dut = Sheet(self.sheets[6]).y
+            self.magx_ref = Sheet(self.sheets[0]).x
+            self.magy_ref = Sheet(self.sheets[0]).y
+            self.phax_ref = Sheet(self.sheets[1]).x
+            self.phay_ref = Sheet(self.sheets[1]).y
+            self.thd = self.sheets[10][2,1]
+            self.sens = self.sheets[8][2,1]
+            self.aopx = Sheet(self.sheets[11]).x
+            self.aopy = Sheet(self.sheets[11]).y
+            self.thdx = Sheet(self.sheets[7]).x
+            self.thdy = Sheet(self.sheets[7]).y
+            self.aopx_ref = Sheet(self.sheets[3]).x
+            self.aopy_ref = Sheet(self.sheets[3]).y
+            self.thdx_ref = Sheet(self.sheets[2]).x
+            self.thdy_ref = Sheet(self.sheets[2]).y
+        
+            self.magx = self.magx_dut
+            self.phax = self.phax_dut
+            self.magy = self.magy_dut - self.magy_ref
+            self.phay = self.phay_dut - self.phay_ref
+
+            [idx, value] = find_nearest(self.magx, 1000)  
+            self.magy = self.magy - self.magy[idx] 
+
+            [idx, value] = find_nearest(self.phax, 1000)  
+            self.phay = self.phay - self.phay[idx] 
+
+      
         
 
     
