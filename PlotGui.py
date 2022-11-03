@@ -208,8 +208,6 @@ class PlotGui():
                 self.axMagnitude.grid(True)
                 self.axMagnitude.set_ylabel("Magnitude in dB")
                 self.axMagnitude.set_xlim( (self.xLimLow.value, self.xLimHigh.value) )
-                #self.axMagnitude.set_ylim( (-20, 40) )
-                
                 self.axMagnitude.set_axisbelow(True)
                 if self.legendSelect.value:
                     self.axMagnitude.legend()
